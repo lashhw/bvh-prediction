@@ -1,0 +1,7 @@
+[submodule "third_party/bvh"]
+	path = bvh
+	url = git@github.com:lashhw/bvh.git
+	branch = prediction
+[submodule "bvh-analysis"]
+	path = bvh-analysis
+	url = git@github.com:lashhw/bvh-analysis.git
