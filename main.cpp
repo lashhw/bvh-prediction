@@ -35,9 +35,6 @@ int main() {
         std::cout << "Before: " << before_statistics.node_traversed << ", "
                   << before_statistics.node_intersections << ", "
                   << before_statistics.trig_intersections << std::endl;
-        auto before_closest_hit_path_masked = before_closest_hit_path.to_string();
-        for (int i = 0; i < 64 - before_closest_hit_depth; i++) before_closest_hit_path_masked[i] = 'x';
-        std::cout << before_closest_hit_path_masked << std::endl;
         if (before_result) {
             std::cout << before_result->primitive_index << ", "
                       << before_result->intersection.t << ", "
@@ -46,6 +43,9 @@ int main() {
         } else {
             std::cout << "MISSED" << std::endl;
         }
+        auto before_closest_hit_path_masked = before_closest_hit_path.to_string();
+        for (int i = 0; i < 64 - before_closest_hit_depth; i++) before_closest_hit_path_masked[i] = 'x';
+        std::cout << before_closest_hit_path_masked << std::endl;
 
         // check whether before_closest_hit_path is correct
         auto first_path = before_closest_hit_path;
@@ -72,9 +72,6 @@ int main() {
         std::cout << "After: " << after_statistics.node_traversed << ", "
                   << after_statistics.node_intersections << ", "
                   << after_statistics.trig_intersections << std::endl;
-        auto after_closest_hit_path_masked = after_closest_hit_path.to_string();
-        for (int i = 0; i < 64 - after_closest_hit_depth; i++) after_closest_hit_path_masked[i] = 'x';
-        std::cout << after_closest_hit_path_masked << std::endl;
         if (after_result) {
             std::cout << after_result->primitive_index << ", "
                       << after_result->intersection.t << ", "
@@ -88,7 +85,6 @@ int main() {
         assert(before_result->intersection.t == after_result->intersection.t);
         assert(before_result->intersection.u == after_result->intersection.u);
         assert(before_result->intersection.v == after_result->intersection.v);
-        assert(before_closest_hit_path_masked == after_closest_hit_path_masked);
 
         std::cout << std::endl;
     }
