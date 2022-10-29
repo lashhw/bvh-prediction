@@ -3,6 +3,7 @@
 #include <bvh/primitive_intersectors.hpp>
 #include "bvh-analysis/utils/parse.hpp"
 #include "bvh-analysis/utils/build_bvh.hpp"
+#include "npy.hpp"
 
 using Triangle = bvh::Triangle<float>;
 using Ray = bvh::Ray<float>;
@@ -18,6 +19,10 @@ int main() {
 
     std::ifstream ray_queries_file("ray_queries.bin", std::ios::in | std::ios::binary);
     float r[7];
+    std::vector<long unsigned> shape{0};
+    std::vector<float> ray_data;
+    std::array<std::vector<int>, 16> path;
+    std::vector<size_t> depth;
     while (ray_queries_file.read(reinterpret_cast<char*>(&r), 7 * sizeof(float))) {
         Ray ray(
                 Vector3(r[0], r[1], r[2]),
@@ -46,6 +51,12 @@ int main() {
         auto before_closest_hit_path_masked = before_closest_hit_path.to_string();
         for (int i = 0; i < 64 - before_closest_hit_depth; i++) before_closest_hit_path_masked[i] = 'x';
         std::cout << before_closest_hit_path_masked << std::endl;
+
+        // save closest_hit_path
+        shape[0]++;
+        for (int i = 0; i < 7; i++) ray_data.push_back(r[i]);
+        for (int i = 0; i < 16; i++) path[i].push_back(before_closest_hit_path.test(i));
+        depth.push_back(before_closest_hit_depth);
 
         // check whether before_closest_hit_path is correct
         auto first_path = before_closest_hit_path;
@@ -88,4 +99,14 @@ int main() {
 
         std::cout << std::endl;
     }
+
+    // save as numpy file
+    auto ray_data_shape = shape;
+    ray_data_shape.push_back(7);
+    npy::SaveArrayAsNumpy("ray.npy", false, ray_data_shape.size(), ray_data_shape.data(), ray_data);
+    for (int i = 0; i < 16; i++) {
+        std::string filename = "path_" + std::to_string(i) + ".npy";
+        npy::SaveArrayAsNumpy(filename, false, shape.size(), shape.data(), path[i]);
+    }
+    npy::SaveArrayAsNumpy("depth.npy", false, shape.size(), shape.data(), depth);
 }
