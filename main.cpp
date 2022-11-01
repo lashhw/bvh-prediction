@@ -35,7 +35,7 @@ int main() {
         std::bitset<64> before_closest_hit_path;
         size_t before_closest_hit_depth = 0;
         auto before_result = traverser.traverse(ray, primitive_intersector, before_statistics,
-                                                false, std::bitset<64>(),
+                                                0, std::bitset<64>(),
                                                 before_closest_hit_path, before_closest_hit_depth);
         std::cout << "Before: " << before_statistics.node_traversed << ", "
                   << before_statistics.node_intersections << ", "
@@ -78,7 +78,7 @@ int main() {
         std::bitset<64> after_closest_hit_path;
         size_t after_closest_hit_depth = 0;
         auto after_result = traverser.traverse(ray, primitive_intersector, after_statistics,
-                                               before_result.has_value(), before_closest_hit_path,
+                                               before_result.has_value() ? 64 : 0, before_closest_hit_path,
                                                after_closest_hit_path, after_closest_hit_depth);
         std::cout << "After: " << after_statistics.node_traversed << ", "
                   << after_statistics.node_intersections << ", "
