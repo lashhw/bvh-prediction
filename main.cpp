@@ -23,6 +23,12 @@ int main() {
     std::vector<float> ray_data;
     std::array<std::vector<int>, 16> path;
     std::vector<size_t> depth;
+    std::vector<int> before_node_traversed;
+    std::vector<int> before_node_intersections;
+    std::vector<int> before_trig_intersections;
+    std::vector<int> after_node_traversed;
+    std::vector<int> after_node_intersections;
+    std::vector<int> after_trig_intersections;
     while (ray_queries_file.read(reinterpret_cast<char*>(&r), 7 * sizeof(float))) {
         Ray ray(
                 Vector3(r[0], r[1], r[2]),
@@ -40,6 +46,9 @@ int main() {
         std::cout << "Before: " << before_statistics.node_traversed << ", "
                   << before_statistics.node_intersections << ", "
                   << before_statistics.trig_intersections << std::endl;
+        before_node_traversed.push_back(before_statistics.node_traversed);
+        before_node_intersections.push_back(before_statistics.node_intersections);
+        before_trig_intersections.push_back(before_statistics.trig_intersections);
         if (before_result) {
             std::cout << before_result->primitive_index << ", "
                       << before_result->intersection.t << ", "
@@ -83,6 +92,9 @@ int main() {
         std::cout << "After: " << after_statistics.node_traversed << ", "
                   << after_statistics.node_intersections << ", "
                   << after_statistics.trig_intersections << std::endl;
+        after_node_traversed.push_back(after_statistics.node_traversed);
+        after_node_intersections.push_back(after_statistics.node_intersections);
+        after_trig_intersections.push_back(after_statistics.trig_intersections);
         if (after_result) {
             std::cout << after_result->primitive_index << ", "
                       << after_result->intersection.t << ", "
@@ -109,4 +121,10 @@ int main() {
         npy::SaveArrayAsNumpy(filename, false, shape.size(), shape.data(), path[i]);
     }
     npy::SaveArrayAsNumpy("depth.npy", false, shape.size(), shape.data(), depth);
+    npy::SaveArrayAsNumpy("before_node_traversed.npy", false, shape.size(), shape.data(), before_node_traversed);
+    npy::SaveArrayAsNumpy("before_node_intersections.npy", false, shape.size(), shape.data(), before_node_intersections);
+    npy::SaveArrayAsNumpy("before_trig_intersections.npy", false, shape.size(), shape.data(), before_trig_intersections);
+    npy::SaveArrayAsNumpy("after_node_traversed.npy", false, shape.size(), shape.data(), after_node_traversed);
+    npy::SaveArrayAsNumpy("after_node_intersections.npy", false, shape.size(), shape.data(), after_node_intersections);
+    npy::SaveArrayAsNumpy("after_trig_intersections.npy", false, shape.size(), shape.data(), after_trig_intersections);
 }
