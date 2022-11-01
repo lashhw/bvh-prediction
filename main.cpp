@@ -3,7 +3,6 @@
 #include <bvh/primitive_intersectors.hpp>
 #include "bvh-analysis/utils/parse.hpp"
 #include "bvh-analysis/utils/build_bvh.hpp"
-#include "npy.hpp"
 
 using Triangle = bvh::Triangle<float>;
 using Ray = bvh::Ray<float>;
@@ -19,16 +18,14 @@ int main() {
 
     std::ifstream ray_queries_file("ray_queries.bin", std::ios::in | std::ios::binary);
     float r[7];
-    std::vector<long unsigned> shape{0};
-    std::vector<float> ray_data;
-    std::array<std::vector<int>, 16> path;
-    std::vector<size_t> depth;
-    std::vector<int> before_node_traversed;
-    std::vector<int> before_node_intersections;
-    std::vector<int> before_trig_intersections;
-    std::vector<int> after_node_traversed;
-    std::vector<int> after_node_intersections;
-    std::vector<int> after_trig_intersections;
+    std::ofstream before_node_traversed_file("before_node_traversed.bin", std::ios::out | std::ios::binary);
+    std::ofstream before_node_intersections_file("before_node_intersections.bin", std::ios::out | std::ios::binary);
+    std::ofstream before_trig_intersections_file("before_trig_intersections.bin", std::ios::out | std::ios::binary);
+    std::ofstream path_file("path.bin", std::ios::out | std::ios::binary);
+    std::ofstream depth_file("depth.bin", std::ios::out | std::ios::binary);
+    std::ofstream after_node_traversed_file("after_node_traversed.bin", std::ios::out | std::ios::binary);
+    std::ofstream after_node_intersections_file("after_node_intersections.bin", std::ios::out | std::ios::binary);
+    std::ofstream after_trig_intersections_file("after_trig_intersections.bin", std::ios::out | std::ios::binary);
     while (ray_queries_file.read(reinterpret_cast<char*>(&r), 7 * sizeof(float))) {
         Ray ray(
                 Vector3(r[0], r[1], r[2]),
@@ -46,9 +43,12 @@ int main() {
         std::cout << "Before: " << before_statistics.node_traversed << ", "
                   << before_statistics.node_intersections << ", "
                   << before_statistics.trig_intersections << std::endl;
-        before_node_traversed.push_back(before_statistics.node_traversed);
-        before_node_intersections.push_back(before_statistics.node_intersections);
-        before_trig_intersections.push_back(before_statistics.trig_intersections);
+        before_node_traversed_file.write(reinterpret_cast<const char*>(&before_statistics.node_traversed),
+                                         sizeof(size_t));
+        before_node_intersections_file.write(reinterpret_cast<const char*>(&before_statistics.node_intersections),
+                                             sizeof(size_t));
+        before_trig_intersections_file.write(reinterpret_cast<const char*>(&before_statistics.trig_intersections),
+                                             sizeof(size_t));
         if (before_result) {
             std::cout << before_result->primitive_index << ", "
                       << before_result->intersection.t << ", "
@@ -62,10 +62,11 @@ int main() {
         std::cout << before_closest_hit_path_masked << std::endl;
 
         // save closest_hit_path
-        shape[0]++;
-        for (int i = 0; i < 7; i++) ray_data.push_back(r[i]);
-        for (int i = 0; i < 16; i++) path[i].push_back(before_closest_hit_path.test(i));
-        depth.push_back(before_closest_hit_depth);
+        for (int i = 0; i < 16; i++) {
+            bool b = before_closest_hit_path.test(i);
+            path_file.write(reinterpret_cast<const char *>(&b), sizeof(bool));
+        }
+        depth_file.write(reinterpret_cast<const char*>(&before_closest_hit_depth), sizeof(size_t));
 
         // check whether before_closest_hit_path is correct
         auto first_path = before_closest_hit_path;
@@ -92,9 +93,12 @@ int main() {
         std::cout << "After: " << after_statistics.node_traversed << ", "
                   << after_statistics.node_intersections << ", "
                   << after_statistics.trig_intersections << std::endl;
-        after_node_traversed.push_back(after_statistics.node_traversed);
-        after_node_intersections.push_back(after_statistics.node_intersections);
-        after_trig_intersections.push_back(after_statistics.trig_intersections);
+        after_node_traversed_file.write(reinterpret_cast<const char*>(&after_statistics.node_traversed),
+                                        sizeof(size_t));
+        after_node_intersections_file.write(reinterpret_cast<const char*>(&after_statistics.node_intersections),
+                                            sizeof(size_t));
+        after_trig_intersections_file.write(reinterpret_cast<const char*>(&after_statistics.trig_intersections),
+                                            sizeof(size_t));
         if (after_result) {
             std::cout << after_result->primitive_index << ", "
                       << after_result->intersection.t << ", "
@@ -111,20 +115,4 @@ int main() {
 
         std::cout << std::endl;
     }
-
-    // save as numpy file
-    auto ray_data_shape = shape;
-    ray_data_shape.push_back(7);
-    npy::SaveArrayAsNumpy("ray.npy", false, ray_data_shape.size(), ray_data_shape.data(), ray_data);
-    for (int i = 0; i < 16; i++) {
-        std::string filename = "path_" + std::to_string(i) + ".npy";
-        npy::SaveArrayAsNumpy(filename, false, shape.size(), shape.data(), path[i]);
-    }
-    npy::SaveArrayAsNumpy("depth.npy", false, shape.size(), shape.data(), depth);
-    npy::SaveArrayAsNumpy("before_node_traversed.npy", false, shape.size(), shape.data(), before_node_traversed);
-    npy::SaveArrayAsNumpy("before_node_intersections.npy", false, shape.size(), shape.data(), before_node_intersections);
-    npy::SaveArrayAsNumpy("before_trig_intersections.npy", false, shape.size(), shape.data(), before_trig_intersections);
-    npy::SaveArrayAsNumpy("after_node_traversed.npy", false, shape.size(), shape.data(), after_node_traversed);
-    npy::SaveArrayAsNumpy("after_node_intersections.npy", false, shape.size(), shape.data(), after_node_intersections);
-    npy::SaveArrayAsNumpy("after_trig_intersections.npy", false, shape.size(), shape.data(), after_trig_intersections);
 }
